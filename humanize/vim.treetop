@@ -1,0 +1,194 @@
+grammar Vim
+    
+
+  
+  rule main
+     (command_operator / command_insert / visual_mode / command_mode / motion)+ {
+      def eval
+          r = []
+          elements.each { |e| r += e.eval }
+          r
+      end
+     }
+  end
+  
+  rule command_operator
+    # the label is necessary for the optional motion in order to check it
+    number:number? t:(operator motion:motion?) {
+      def eval 
+        r = []
+        r << [number.text_value, "#{number.text_value} times: "] unless number.empty?
+        r << [t.text_value, t.operator.eval + (t.motion.empty? ? '' : " #{t.motion.eval[1]}")] 
+      end
+      }
+  end
+  
+  rule operator
+    ('d' / 'y') <Command>
+  end
+  
+  rule command_insert
+    insert_command motion insert_input {
+      def eval
+        r = []
+        r << [insert_command.text_value + motion.text_value, "#{insert_command.eval} #{motion.eval[1]}"] 
+        r + insert_input.eval
+      end
+    }
+  end
+  
+  rule insert_command
+    # dirty hack: otherwise a Command module is needed
+    ('c' / 'c') <Command>
+  end
+  
+  rule insert_input
+    t:(!input_end .)* input_end {
+      def eval
+        [[t.text_value, 'type ' + t.text_value],
+         input_end.eval
+        ]
+      end
+    }
+  end
+  
+  rule input_end
+    # dirty hack - wihout OR, eval is not found
+    ('<ESC>' / '<ESC>') {
+      def eval
+        [text_value, 'go to normal mode']
+      end
+    }
+  end
+  
+  rule visual_mode
+    'v' motions:(motion+) command_for_selection {
+      def eval
+        r = [
+          ['v', 'go to visual mode']
+        ]
+        motions.elements.each do |m|
+          r << m.eval("selection")
+        end
+        r << command_for_selection.eval
+      end
+    }
+  end
+  
+  rule command_for_selection
+    insert_command insert_input {
+      def eval
+        r = []
+        r << [insert_command.text_value, insert_command.eval('selection')] 
+        r + insert_input.eval
+      end
+    }
+  end
+
+  rule command_mode
+    ':' range:range? command_for_command command_end {
+      def eval
+        r = [
+          [':', 'go to command mode']
+        ]
+        r << range.eval unless range.empty?
+        r += command_for_command.eval
+        r << [command_end.text_value, 'execute command and go to normal mode']
+      end
+    }
+  end
+  
+  rule range
+    l1:range_end ',' l2:range_end {
+      def eval
+        [text_value, "select range: #{l1.eval} to #{l2.eval}"]
+      end
+    }
+  end
+  
+  rule range_end
+    number {
+      def eval
+        'line ' + text_value
+      end
+    } / 
+    '+' n:number {
+      def eval
+        "the next #{n.text_value} line(s)"
+      end
+    } / 
+    '-' n:number {
+      def eval
+        "the previous #{n.text_value} line(s)"
+      end
+    } / 
+    '^' {
+      def eval
+        'first line'
+      end
+    } / 
+    '$' {
+      def eval
+        'last line'
+      end
+    } / 
+    '.' {
+      def eval
+        'current line'
+      end
+    }
+  end
+  
+  rule command_for_command 
+    substitute / delete
+  end
+  
+  rule substitute
+    's' find:('/' term:[^/]+) replace:('/' term:(!command_end .)*) {
+      def eval
+        [
+          ['s', 'substitute'], 
+          [find.text_value, 'find ' + find.term.text_value],
+          [replace.text_value, 'replace with ' + replace.term.text_value]
+        ]
+      end
+    }
+  end
+  
+  rule delete
+    'd' {
+      def eval
+        [['d', 'delete range']]
+      end
+    }
+  end
+
+  rule command_end
+    '<CR>'
+  end
+
+  rule motion
+      pure_motion / impure_motion
+  end
+
+  rule pure_motion
+    quantity:motion_counter?
+    motion:(
+      'w' / '(' / 
+      'h' / '<LEFT>' / 'j' / '<DOWN>' / 'k' / '<UP>' / 'l' / '<RIGHT>'
+    ) <Motion>
+  end
+
+  rule impure_motion
+    where:number? motion:('G' / 'gg') <Macromotion>
+  end
+
+  rule motion_counter
+    (number / 'a' / 'i') 
+  end
+  
+  rule number
+    [1-9] [0-9]*
+  end
+
+end
