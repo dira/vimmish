@@ -10,32 +10,32 @@ require "lib/command"
 require "lib/motion"
 require "lib/macro_motion"
 require "lib/parametric_motion"
+require "test/assertions"
 
 Treetop.load "lib/vim"
 
 parser = VimParser.new
 
 describe "Vimmish::Parser" do
-  
   describe 'motions' do
     describe 'arrows' do
+      include Assertions
       {
         'left' => ['h', '<LEFT>'],
         'down' => ['j', '<DOWN>'],
         'up' => ['k', '<UP>'],
         'right' => ['l', '<RIGHT>'],
       }.each_pair do |move, commands|
-        commands.each do |command|
-          it "should parse #{command} and translate correctly" do
-            translation = parser.parse(command)
-            translation.should.not.be nil
-            translation.eval.should.be.equal [command, "move #{move}"]
+        commands.each do |vim|
+          it "should parse #{vim} and translate correctly" do
+            vim.should parse_to(parser, [vim, "move #{move}"])
           end
         end
       end
     end
 
     describe 'character movement' do
+      include Assertions
       {
         'fy' => 'move on the next y',
         '2fy' => 'move on the next y, 2 times',
@@ -45,16 +45,15 @@ describe "Vimmish::Parser" do
         '2ty' => 'move to the next y, 2 times',
         'Ty' => 'move to the previous y',
         '2Ty' => 'move to the previous y, 2 times',
-      }.each_pair do |command, humanized|
-        it "should parse #{command} and translate correctly" do
-          translation = parser.parse(command)
-          translation.should.not.be nil
-          translation.eval.should.be.equal [command, humanized]
+      }.each_pair do |vim, result|
+        it "should parse #{vim} and translate correctly" do
+          vim.should parse_to(parser, [vim, result])
         end
       end
     end
 
     describe 'word movement' do
+      include Assertions
       {
         'w' => 'move to the begining of the next word',
         '4w' => 'move to the begining of the next word, 4 times',
@@ -70,16 +69,15 @@ describe "Vimmish::Parser" do
         '3E' => 'move to the end of the next space-separated-word, 3 times',
         'gE' => 'move to the end of the previous space-separated-word',
         '3gE' => 'move to the end of the previous space-separated-word, 3 times',
-      }.each_pair do |command, humanized|
-        it "should parse #{command} and translate correctly" do
-          translation = parser.parse(command)
-          translation.should.not.be nil
-          translation.eval.should.be.equal [command, humanized]
+      }.each_pair do |vim, result|
+        it "should parse #{vim} and translate correctly" do
+          vim.should parse_to(parser, [vim, result])
         end
       end
     end
 
     describe 'line movement' do
+      include Assertions
       {
         '^'  => 'move to the begining of the line (not blank character)',
         '3^' => 'move to the begining of the line (not blank character)', # no effect
@@ -87,29 +85,27 @@ describe "Vimmish::Parser" do
         '$'  => 'move to the end of the line',
         '1$' => 'move to the end of the line',
         '3$' => 'move to the end of the line that is 2 lines below',
-      }.each_pair do |command, humanized|
-        it "should parse #{command} and translate correctly" do
-          translation = parser.parse(command)
-          translation.should.not.be nil
-          translation.eval.should.be.equal [command, humanized]
+      }.each_pair do |vim, result|
+        it "should parse #{vim} and translate correctly" do
+          vim.should parse_to(parser, [vim, result])
         end
       end
     end
 
     describe 'syntax-dependent movement' do
+      include Assertions
       {
         '%' => 'move to the matching paranthesys',
-      }.each_pair do |command, humanized|
-        it "should parse #{command} and translate correctly" do
-          translation = parser.parse(command)
-          translation.should.not.be nil
-          translation.eval.should.be.equal [command, humanized]
+      }.each_pair do |vim, result|
+        it "should parse #{vim} and translate correctly" do
+          vim.should parse_to(parser, [vim, result])
         end
       end
     end
 
     
     describe 'moving to specific lines' do
+      include Assertions
       {
         'G' => 'move to last line (end of file)',
         '3G' => 'move to line 3',
@@ -120,17 +116,16 @@ describe "Vimmish::Parser" do
         # CTRL+U scroll down 50%, CTRL+D scroll up 50%,
         # CTRL+E scroll up 1 line, CTRL+Y scroll down 1 line,
         # CTRL+F scroll forward screen, CTRL+B scroll backword screen
-      }.each_pair do |command, humanized|
-        it "should parse #{command} and translate correctly" do
-          translation = parser.parse(command)
-          translation.should.not.be nil
-          translation.eval.should.be.equal [command, humanized]
+      }.each_pair do |vim, result|
+        it "should parse #{vim} and translate correctly" do
+          vim.should parse_to(parser, [vim, result])
         end
       end
     end
   end
   
   describe "smoke tests" do
+    #include Assertions
     ["d", "y"].each do |command|
       it "should parse #{command}" do
         parser.parse(command).should.not.be nil
@@ -149,91 +144,42 @@ describe "Vimmish::Parser" do
   end
   
   describe 'normal mode commands' do
-    it "should parse cwrandom blah>blah<blah<ES><ESC>" do
-      #r = parser.parse("cwrandom blah>blah<blah<ES><ESC>")
-      r = parser.parse("cwrandom blah>blah<blah<ES><ESC>")
-      r.should.not.be nil
-      r.eval.should == [
+    include Assertions
+
+    it "should parse change word with something" do
+      vim = "cwrandom blah>blah<blah<ES><ESC>"
+      result = [
         ['cw', 'change to the begining of the next word'],
         ['random blah>blah<blah<ES>', 'type random blah>blah<blah<ES>'],
         ['<ESC>', 'go to normal mode'],
       ]
     end
 
-    it "should parse dw" do
-      r = parser.parse("dw")
-      r.should.not.be nil
-      r.eval.should == [
-        ['dw', 'delete to the begining of the next word']
-      ]
-    end
-   
-    it "should parse daw" do
-      r = parser.parse("daw")
-      r.should.not.be nil
-      r.eval.should == [
-        ['daw', 'delete a word']
-      ]
-    end
-
-    it "should parse d1w" do
-      r = parser.parse("d1w")
-      r.should.not.be nil
-      r.eval.should == [
-        ['d1w', 'delete to the begining of the next word']
-      ]
-    end
-
-    it "should parse d2w" do
-      r = parser.parse("d2w")
-      r.should.not.be nil
-      r.eval.should == [
-        ['d2w', 'delete to the begining of the next word, 2 times']
-      ]
-    end
-
-    it "should parse diw" do
-      r = parser.parse("diw")
-      r.should.not.be nil
-      r.eval.should == [
-        ['diw', 'delete inner word']
-      ]
-    end
-
-    it "should parse y(" do
-      r = parser.parse("y(")
-      r.should.not.be nil
-      r.eval.should == [
-        ['y(', 'yank sentence']
-      ]
-     end
-
-     it "should parse 2dw" do
-      r = parser.parse("2dw")
-      r.should.not.be nil
-      r.eval.should == [
-        ['2',  '2 times: '],
-        ['dw', 'delete to the begining of the next word']
-       ]
-     end
-     
-     it "should parse 2dw2dw" do
-      r = parser.parse("2dw2dw")
-      r.should.not.be nil
-      r.eval.should == [
+    {
+      'dw'  => [ ['dw', 'delete to the begining of the next word'] ],
+      "daw" => [ ['daw', 'delete a word'] ],
+      "d1w" => [ ['d1w', 'delete to the begining of the next word'] ],
+      "d2w" => [ ['d2w', 'delete to the begining of the next word, 2 times'] ],
+      "diw" => [ ['diw', 'delete inner word'] ],
+      "y("  => [ ['y(', 'yank sentence'] ],
+      "2dw" => [ ['2',  '2 times: '], ['dw', 'delete to the begining of the next word'] ],
+      "2dw2dw" => [
           ['2',  '2 times: '],
           ['dw', 'delete to the begining of the next word'],
-          ['2',  '2 times: '],
-          ['dw', 'delete to the begining of the next word']
-      ]
-     end
+        ] * 2,
+    }.each_pair do |vim, result|
+      it "should parse #{vim}" do
+        vim.should parse_to(parser, result)
+      end
+    end
   end
  
   describe 'visual mode' do
+    include Assertions
+
     it "should parse v3wcabcde<ESC>" do
-      r = parser.parse("v3wcabcde<ESC>")
-      r.should.not.be nil
-      r.eval.should == [
+      vim = "v3wcabcde<ESC>"
+      result = [
         ['v', 'go to visual mode'],
         ['3w', 'select to the begining of the next word, 3 times'], 
         [
@@ -242,20 +188,23 @@ describe "Vimmish::Parser" do
           ['<ESC>', 'go to normal mode']
           ]
       ]
+      vim.should parse_to(parser, result)
     end
   end
 
-   describe "command_mode" do
+  describe "command_mode" do
+    include Assertions
+    
     it "should parse command mode with substitute" do
-      r = parser.parse(":s/gogo/gaga<CR>")
-      r.should.not.be nil
-      r.eval.should == [
+      vim = ":s/gogo/gaga<CR>"
+      result = [
         [':', 'go to command mode'],
         ['s', 'substitute'], 
         ['/gogo', 'find gogo'], 
         ['/gaga', 'replace with gaga'],
         ['<CR>', 'execute command and go to normal mode']
       ]
+      vim.should parse_to(parser, result)
     end
 
     [ 
@@ -265,17 +214,17 @@ describe "Vimmish::Parser" do
       ["12,.", 'line 12 to current line'] ,
       [".,+2", 'current line to the next 2 line(s)'] ,
       [".,-2", 'current line to the previous 2 line(s)'] ,
-     ].each do |range, humanized|
-      it "should parse :#{range}d<CR>" do
-          r = parser.parse(":#{range}d<CR>")
-          r.should.not.be nil
-          r.eval.should == [
-            [':', 'go to command mode'],
-            [range, "select range: #{humanized}"], 
-            ['d', 'delete range'], 
-            ['<CR>', 'execute command and go to normal mode']
-          ]
-      end
-    end
+    ].each do |range, humanized|
+      it "should parse delete range #{range}" do
+        vim = ":#{range}d<CR>" 
+        result = [
+          [':', 'go to command mode'],
+          [range, "select range: #{humanized}"], 
+          ['d', 'delete range'], 
+          ['<CR>', 'execute command and go to normal mode']
+        ]
+        vim.should parse_to(parser, result)
+     end
    end
+  end
 end
