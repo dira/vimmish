@@ -1,49 +1,82 @@
 class Motion < Treetop::Runtime::SyntaxNode
   def eval (mode = nil)
     r = eval_simple(motion)
-    r = 'select ' + r if mode == 'selection'
+    mode_part = {
+      nil => 'move ',
+      :command => '',
+      :selection => 'select ',
+    }[mode]
+    r = "#{mode_part}#{r}"
     [text_value, r]
   end
   
   def motion_name(motion)
     names = {
-      'w' => 'word',
+      'w' => ['to the begining of the next word', 'word'],
+      'b' => ['to the begining of the previous word', 'word'],
+      'B' => ['backwards one space-separated-word', 'word'],
+      'e' => ['to the end of the next word', 'word'],
+      'E' => ['to the end of the next space-separated-word', 'word'],
+      'ge' => ['to the end of the previous word', 'word'],
+      'gE' => ['to the end of the previous space-separated-word', 'word'],
+
+      '0' => 'to the begining of the line',
+      '^' => 'to the begining of the line (not blank character)',
+      '$' => 'to the end of the line',
+
+      '%' => 'to the matching paranthesys',
       '(' => 'sentence',
       
-      'h' => 'move left',
-      '<LEFT>' => 'move left',
+      'h' => 'left',
+      '<LEFT>' => 'left',
       
-      'j' => 'move down',
-      '<DOWN>' => 'move down',
+      'j' => 'down',
+      '<DOWN>' => 'down',
      
-      'k' => 'move up',
-      '<UP>' => 'move up',
+      'k' => 'up',
+      '<UP>' => 'up',
       
-      'l' => 'move right',
-      '<RIGHT>' => 'move right',
+      'l' => 'right',
+      '<RIGHT>' => 'right',
     }
     return names[motion]
   end
- 
+     
   # TODO move to a special class
   def eval_simple(motion)
     text = motion.text_value
     motion_name = motion_name(text)
-    quantity_text = quantity.text_value
+    motion_name = motion_name[0] if motion_name.respond_to? :flatten
+    begin
+      quantity_text = quantity.text_value
+    rescue
+      nil
+    end
 
-    if (quantity_text.empty?)
-      return motion_name
+    result = motion_name
+    if (quantity_text.nil? || quantity_text.empty?)
+      return result
     end
       
-    if (text == 'G' || text == 'gg')
-      return "move to line #{quantity_text}"
-    end
-  
-    q = case quantity_text
-      when 'a' then 'a'
-      when 'i' then 'inner'
-      else motion_name += 's' unless quantity_text == '1'; quantity_text
+    if (quantity_text.to_i != 0)
+      quantity_value = quantity_text.to_i
+      if (text == '^')
+        q = '' #ignore count
+      elsif (text == '$')
+        # special count
+        q = " that is #{quantity_value - 1} lines below" if quantity_value > 1
+      else
+        q = ", #{quantity_text} #{pluralize('time', quantity_text)}" if quantity_value > 1
       end
-    q + ' ' + motion_name
+      "#{motion_name}#{q}"
+    else 
+      quantity_value = {'a' => 'a', 'i' => 'inner'}[quantity_text]
+      "#{quantity_value} #{motion_name(text)[1]}"
+    end
+ end
+
+private
+  def pluralize(what, how_many)
+    return what + (how_many != 1 ? 's' : '')
   end
 end

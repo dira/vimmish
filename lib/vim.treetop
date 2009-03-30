@@ -18,7 +18,7 @@ grammar Vim
       def eval 
         r = []
         r << [number.text_value, "#{number.text_value} times: "] unless number.empty?
-        r << [t.text_value, t.operator.eval + (t.motion.empty? ? '' : " #{t.motion.eval[1]}")] 
+        r << [t.text_value, t.operator.eval + (t.motion.empty? ? '' : " #{t.motion.eval(:command)[1]}")] 
       end
       }
   end
@@ -31,7 +31,7 @@ grammar Vim
     insert_command motion insert_input {
       def eval
         r = []
-        r << [insert_command.text_value + motion.text_value, "#{insert_command.eval} #{motion.eval[1]}"] 
+        r << [insert_command.text_value + motion.text_value, "#{insert_command.eval} #{motion.eval(:command)[1]}"] 
         r + insert_input.eval
       end
     }
@@ -68,7 +68,7 @@ grammar Vim
           ['v', 'go to visual mode']
         ]
         motions.elements.each do |m|
-          r << m.eval("selection")
+          r << m.eval(:selection)
         end
         r << command_for_selection.eval
       end
@@ -168,25 +168,42 @@ grammar Vim
   end
 
   rule motion
-      pure_motion / impure_motion
+      repeatable_motion / parametric_motion / where_motion / zero_motion
   end
 
-  rule pure_motion
-    quantity:motion_counter?
-    motion:(
-      'w' / '(' / 
-      'h' / '<LEFT>' / 'j' / '<DOWN>' / 'k' / '<UP>' / 'l' / '<RIGHT>'
-    ) <Motion>
-  end
+    rule repeatable_motion
+      quantity:motion_counter?
+      motion:(
+        'h' / '<LEFT>' / 'j' / '<DOWN>' / 'k' / '<UP>' / 'l' / '<RIGHT>' /
+        [wbeBE] / 'g' [eE] / 
+        [$^] /
+        '('
+      ) <Motion>
+    end
+    
+    rule zero_motion
+      motion:('0' / '%')
+      param:""
+      <Motion>
+    end
 
-  rule impure_motion
-    where:number? motion:('G' / 'gg') <Macromotion>
-  end
+    rule parametric_motion
+      quantity:motion_counter?
+      motion:('f' / 'F' / 't' / 'T')
+      param:[a-zA-Z]
+      <ParametricMotion>
+    end
 
-  rule motion_counter
-    (number / 'a' / 'i') 
-  end
-  
+    rule where_motion
+      where:number? motion:('G' / 'gg') <Macromotion>
+    end
+
+
+
+      rule motion_counter
+        (number / 'a' / 'i') 
+      end
+      
   rule number
     [1-9] [0-9]*
   end
