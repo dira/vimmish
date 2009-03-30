@@ -6,11 +6,11 @@ require File.join(File.dirname(__FILE__), 'test_helper.rb')
 #  end
 #end
 
-require "humanize/command"
-require "humanize/motion"
-require "humanize/macromotion"
+require "lib/command"
+require "lib/motion"
+require "lib/macromotion"
 
-Treetop.load "humanize/vim"
+Treetop.load "lib/vim"
 
 parser = VimParser.new
 
@@ -54,12 +54,91 @@ describe "Vimmish::Parser" do
       end
     end
 
-    describe 'macro' do
+    describe 'character movement' do
+      {
+        'fy' => 'move on the next "y" character',
+        '2fy' => 'move on the next "y" character, 2 times',
+        'Fy' => 'move on the previous "y" character',
+        '2Fy' => 'move on the previous "y" character, 2 times',
+        'ty' => 'move to the next "y" character',
+        '2ty' => 'move to the next "y" character, 2 times',
+        'Ty' => 'move to the previous "y" character',
+        '2Ty' => 'move to the previous "y" character, 2 times',
+      }.each_pair do |command, humanized|
+        it "should parse #{command} and translate correctly" do
+          translation = parser.parse(command)
+          translation.should.not.be nil
+          translation.eval.should.be.equal [command, humanized]
+        end
+      end
+    end
+
+    describe 'word movement' do
+      {
+        'w' => 'move to the begining of the next word',
+        '4w' => 'move to the begining of the next word, 4 times',
+        'b' => 'move to the beginging of the previous word',
+        '7b' => 'move to the beginging of the previous word, 7 times',
+        'e' => 'move to the end of the next word',
+        '3e' => 'move to the end of the next word, 3 times',
+        'ge' => 'move to the end of the previous word',
+        '3ge' => 'move to the end of the previous word, 3 times',
+        'B' => 'move backwards 1 space-separated-word',
+        '7B' => 'move backwards 7 space-separated-words',
+        'E' => 'move to the end of the next space-separated-word',
+        '3E' => 'move to the end of the next space-separated-word, 3 times',
+        'GE' => 'move to the end of the previous space-separated-word',
+        '3GE' => 'move to the end of the previous space-separated-word, 3 times',
+      }.each_pair do |command, humanized|
+        it "should parse #{command} and translate correctly" do
+          translation = parser.parse(command)
+          translation.should.not.be nil
+          translation.eval.should.be.equal [command, humanized]
+        end
+      end
+    end
+
+    describe 'line movement' do
+      {
+        '^' => 'move to the begining of the line (not blank character)',
+        '3^' => 'move to the begining of the line (not blank character)', # no effect
+        '0' => 'move to the begining of the line (not blank character)', # cannot take count
+        '$' => 'move to the end of the line',
+        '1$' => 'move to the end of the line',
+        '3$' => 'move to the end of the line that is 2 lines below',
+      }.each_pair do |command, humanized|
+        it "should parse #{command} and translate correctly" do
+          translation = parser.parse(command)
+          translation.should.not.be nil
+          translation.eval.should.be.equal [command, humanized]
+        end
+      end
+    end
+
+    describe 'syntax-dependent movement' do
+      {
+        '%' => 'move to the matching paranthesys',
+      }.each_pair do |command, humanized|
+        it "should parse #{command} and translate correctly" do
+          translation = parser.parse(command)
+          translation.should.not.be nil
+          translation.eval.should.be.equal [command, humanized]
+        end
+      end
+    end
+
+    
+    describe 'moving to specific lines' do
       {
         'G' => 'move to last line (end of file)',
         '3G' => 'move to line 3',
         'gg' => 'move to first line (beginning of file)',
-        '15gg' => 'move to line 15'
+        '15gg' => 'move to line 15',
+        # TODO %90 = 90%
+        # TODO H - home, M - middle, L - last
+        # CTRL+U scroll down 50%, CTRL+D scroll up 50%,
+        # CTRL+E scroll up 1 line, CTRL+Y scroll down 1 line,
+        # CTRL+F scroll forward screen, CTRL+B scroll backword screen
       }.each_pair do |command, humanized|
         it "should parse #{command} and translate correctly" do
           translation = parser.parse(command)
