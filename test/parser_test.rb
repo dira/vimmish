@@ -8,33 +8,14 @@ require File.join(File.dirname(__FILE__), 'test_helper.rb')
 
 require "lib/command"
 require "lib/motion"
-require "lib/macromotion"
+require "lib/macro_motion"
+require "lib/parametric_motion"
 
 Treetop.load "lib/vim"
 
 parser = VimParser.new
 
 describe "Vimmish::Parser" do
-  setup do 
-  end
-  
-  describe "smoke tests" do
-    ["d", "y"].each do |command|
-      it "should parse #{command}" do
-        parser.parse(command).should.not.be nil
-      end
-      ["w", "("].each do |motion|    
-        it "should parse #{command}#{motion}" do
-          parser.parse(command + motion).should.not.be nil
-        end
-      end
-    end
-  
-    it "should not parse inexistant command" do
-      parser.parse('q').should.be nil
-      # p parser.failure_reason
-    end
-  end
   
   describe 'motions' do
     describe 'arrows' do
@@ -45,7 +26,7 @@ describe "Vimmish::Parser" do
         'right' => ['l', '<RIGHT>'],
       }.each_pair do |move, commands|
         commands.each do |command|
-          it "should parse {command} and translate correctly" do
+          it "should parse #{command} and translate correctly" do
             translation = parser.parse(command)
             translation.should.not.be nil
             translation.eval.should.be.equal [command, "move #{move}"]
@@ -56,14 +37,14 @@ describe "Vimmish::Parser" do
 
     describe 'character movement' do
       {
-        'fy' => 'move on the next "y" character',
-        '2fy' => 'move on the next "y" character, 2 times',
-        'Fy' => 'move on the previous "y" character',
-        '2Fy' => 'move on the previous "y" character, 2 times',
-        'ty' => 'move to the next "y" character',
-        '2ty' => 'move to the next "y" character, 2 times',
-        'Ty' => 'move to the previous "y" character',
-        '2Ty' => 'move to the previous "y" character, 2 times',
+        'fy' => 'move on the next y',
+        '2fy' => 'move on the next y, 2 times',
+        'Fy' => 'move on the previous y',
+        '2Fy' => 'move on the previous y, 2 times',
+        'ty' => 'move to the next y',
+        '2ty' => 'move to the next y, 2 times',
+        'Ty' => 'move to the previous y',
+        '2Ty' => 'move to the previous y, 2 times',
       }.each_pair do |command, humanized|
         it "should parse #{command} and translate correctly" do
           translation = parser.parse(command)
@@ -77,18 +58,18 @@ describe "Vimmish::Parser" do
       {
         'w' => 'move to the begining of the next word',
         '4w' => 'move to the begining of the next word, 4 times',
-        'b' => 'move to the beginging of the previous word',
-        '7b' => 'move to the beginging of the previous word, 7 times',
+        'b' => 'move to the begining of the previous word',
+        '7b' => 'move to the begining of the previous word, 7 times',
         'e' => 'move to the end of the next word',
         '3e' => 'move to the end of the next word, 3 times',
         'ge' => 'move to the end of the previous word',
         '3ge' => 'move to the end of the previous word, 3 times',
-        'B' => 'move backwards 1 space-separated-word',
-        '7B' => 'move backwards 7 space-separated-words',
+        'B' => 'move backwards one space-separated-word',
+        '7B' => 'move backwards one space-separated-word, 7 times',
         'E' => 'move to the end of the next space-separated-word',
         '3E' => 'move to the end of the next space-separated-word, 3 times',
-        'GE' => 'move to the end of the previous space-separated-word',
-        '3GE' => 'move to the end of the previous space-separated-word, 3 times',
+        'gE' => 'move to the end of the previous space-separated-word',
+        '3gE' => 'move to the end of the previous space-separated-word, 3 times',
       }.each_pair do |command, humanized|
         it "should parse #{command} and translate correctly" do
           translation = parser.parse(command)
@@ -100,10 +81,10 @@ describe "Vimmish::Parser" do
 
     describe 'line movement' do
       {
-        '^' => 'move to the begining of the line (not blank character)',
+        '^'  => 'move to the begining of the line (not blank character)',
         '3^' => 'move to the begining of the line (not blank character)', # no effect
-        '0' => 'move to the begining of the line (not blank character)', # cannot take count
-        '$' => 'move to the end of the line',
+        '0' => 'move to the begining of the line', # cannot take count
+        '$'  => 'move to the end of the line',
         '1$' => 'move to the end of the line',
         '3$' => 'move to the end of the line that is 2 lines below',
       }.each_pair do |command, humanized|
@@ -149,13 +130,31 @@ describe "Vimmish::Parser" do
     end
   end
   
+  describe "smoke tests" do
+    ["d", "y"].each do |command|
+      it "should parse #{command}" do
+        parser.parse(command).should.not.be nil
+      end
+      ["w", "("].each do |motion|    
+        it "should parse #{command}#{motion}" do
+          parser.parse(command + motion).should.not.be nil
+        end
+      end
+    end
+  
+    it "should not parse inexistant command" do
+      parser.parse('q').should.be nil
+      # p parser.failure_reason
+    end
+  end
+  
   describe 'normal mode commands' do
     it "should parse cwrandom blah>blah<blah<ES><ESC>" do
       #r = parser.parse("cwrandom blah>blah<blah<ES><ESC>")
       r = parser.parse("cwrandom blah>blah<blah<ES><ESC>")
       r.should.not.be nil
       r.eval.should == [
-        ['cw', 'change word'],
+        ['cw', 'change to the begining of the next word'],
         ['random blah>blah<blah<ES>', 'type random blah>blah<blah<ES>'],
         ['<ESC>', 'go to normal mode'],
       ]
@@ -165,7 +164,7 @@ describe "Vimmish::Parser" do
       r = parser.parse("dw")
       r.should.not.be nil
       r.eval.should == [
-        ['dw', 'delete word']
+        ['dw', 'delete to the begining of the next word']
       ]
     end
    
@@ -181,7 +180,7 @@ describe "Vimmish::Parser" do
       r = parser.parse("d1w")
       r.should.not.be nil
       r.eval.should == [
-        ['d1w', 'delete 1 word']
+        ['d1w', 'delete to the begining of the next word']
       ]
     end
 
@@ -189,7 +188,7 @@ describe "Vimmish::Parser" do
       r = parser.parse("d2w")
       r.should.not.be nil
       r.eval.should == [
-        ['d2w', 'delete 2 words']
+        ['d2w', 'delete to the begining of the next word, 2 times']
       ]
     end
 
@@ -214,7 +213,7 @@ describe "Vimmish::Parser" do
       r.should.not.be nil
       r.eval.should == [
         ['2',  '2 times: '],
-        ['dw', 'delete word']
+        ['dw', 'delete to the begining of the next word']
        ]
      end
      
@@ -223,9 +222,9 @@ describe "Vimmish::Parser" do
       r.should.not.be nil
       r.eval.should == [
           ['2',  '2 times: '],
-          ['dw', 'delete word'],
+          ['dw', 'delete to the begining of the next word'],
           ['2',  '2 times: '],
-          ['dw', 'delete word'],
+          ['dw', 'delete to the begining of the next word']
       ]
      end
   end
@@ -236,7 +235,7 @@ describe "Vimmish::Parser" do
       r.should.not.be nil
       r.eval.should == [
         ['v', 'go to visual mode'],
-        ['3w', 'select 3 words'], 
+        ['3w', 'select to the begining of the next word, 3 times'], 
         [
           ['c', 'change selection'], 
           ['abcde', 'type abcde'],
