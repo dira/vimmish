@@ -177,6 +177,33 @@ describe "Vimmish::Parser" do
   describe 'visual mode' do
     include Assertions
 
+    #it "should parse vw~" do
+      #vim = "vw~"
+      #result = [
+        #['v', 'go to visual mode'],
+        #['w', 'select ot the begining of the next word'],
+        #['~', 'make uppercase']
+      #]
+      #vim.should parse_to(parser, result)
+    #end
+
+    #it "should parse v$" do
+      #vim = "v$"
+      #result = [
+        #['v', 'go to visual mode'],
+        #['w', 'select to the end of the line'],
+      #]
+      #vim.should parse_to(parser, result)
+    #end
+
+    #it "should parse gv" do
+      #vim = "gv"
+      #result = [
+        #['gv', 'restore previous visual selection'],
+      #]
+      #vim.should parse_to(parser, result)
+    #end
+
     it "should parse v3wcabcde<ESC>" do
       vim = "v3wcabcde<ESC>"
       result = [
@@ -192,9 +219,75 @@ describe "Vimmish::Parser" do
     end
   end
 
+  describe "commands" do
+    include Assertions
+
+    #it "should parse dd" do
+      #vim = "dd"
+      #result = [
+        #['dd', 'delete current line']
+      #]
+      #vim.should parse_to(parser, result)
+    #end
+    
+    #it "should parse cc" do
+      #vim = "cc"
+      #result = [
+        #['cc', 'change current line']
+      #]
+      #vim.should parse_to(parser, result)
+    #end
+
+    it "should parse c<RIGHT>" do
+      vim = 'c<RIGHT>'
+      result = [
+        ['c', 'change'],
+        ['<RIGHT>', 'one character to the right']
+      ]
+    end
+
+    #it "should parse D" do
+      #vim = "D"
+      #result = [
+        #['D', 'delete the rest of the current line']
+      #]
+      #vim.should parse_to(parser, result)
+    #end
+    #it "should parse 3D" do
+      #vim = "3D"
+      #result = [
+        #['3D', 'delete the rest of the current line, 3 times'] # TODO it advances too..
+      #]
+      #vim.should parse_to(parser, result)
+    #end
+
+    #it "should parse C" do
+      #vim = "C"
+      #result = [
+        #['C', 'change the rest of the current line']
+      #]
+      #vim.should parse_to(parser, result)
+    #end
+
+    #it "should parse 4C" do
+      #vim = "4C"
+      #result = [
+        #[vim, 'change the rest of the current line, 4 times']# TODO it advances too..
+      #]
+      #vim.should parse_to(parser, result)
+    #end
+
+    #it "should parse J" do
+      #vim = "J"
+      #result = [
+        #['J', 'unite current line with the next one']
+      #]
+      #vim.should parse_to(parser, result)
+    #end
+  end
+
   describe "command_mode" do
     include Assertions
-    
     it "should parse command mode with substitute" do
       vim = ":s/gogo/gaga<CR>"
       result = [
