@@ -1,7 +1,5 @@
 require File.join(File.dirname(__FILE__), 'test_helper.rb')
 parser = VimParser.new
-require 'pp'
-pp '-------', parser
 
 #class Treetop::Runtime::SyntaxNode
 #  def inspect
@@ -15,7 +13,7 @@ describe "smoke tests" do
     it "should parse #{command}" do
       parser.parse(command).should.not.be nil
     end
-    ["w", "("].each do |motion|    
+    ["w", "("].each do |motion|
       it "should parse #{command}#{motion}" do
         parser.parse(command + motion).should.not.be nil
       end
