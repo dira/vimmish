@@ -10,11 +10,11 @@ grammar Vim
   end
   
   rule normal_mode
-    nmode_command_motionless / nmode_command_with_motion
+    nmode_command_motionless / nmode_command_with_motion / nmode_command_special
   end
 
     rule nmode_command_motionless
-      times:number? operator:(('x' / 'dd' / 'D' / 'J' / '~') <Command>) {
+      times:number? operator:(('x' / 'dd' / 'D' / 'J' / '~' ) <Command>) {
         def eval 
           r = []
           r << [times.text_value, "#{times.text_value} times: "] unless times.empty?
@@ -34,6 +34,17 @@ grammar Vim
         }
     end
   
+    rule nmode_command_special
+      times:number? operator:('r' <Command>) replacement:. {
+        def eval 
+          r = []
+          r << [times.text_value, "#{times.text_value} times: "] unless times.empty?
+          r << [operator.text_value, operator.eval] 
+          r << [replacement.text_value, replacement.text_value]
+        end
+        }
+    end
+
   include VimInsert     
   rule insert_mode
     imode / imode_change

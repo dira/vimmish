@@ -14,6 +14,10 @@ describe 'normal mode commands' do
     "d3w" => [ ['d3w', 'delete to the begining of the next word, 3 times'] ],
     "x" =>  [ ['x', 'delete a character'] ],
     "~" =>  [ ['~', 'change character case'] ],
+    "r@" =>  [
+      ['r', 'replace current character with: '],
+      ['@', '@']
+    ],
   }.each_pair do |vim, result|
     it "should parse #{vim}" do
       vim.should parse_to(parser, result)

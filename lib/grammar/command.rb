@@ -6,6 +6,7 @@ module Command
       'y' => 'yank',
 
       'x' => 'delete a character',
+      'r' => 'replace current character with: ',
       'dd' => 'delete current line',
       'D' => 'delete the rest of the current line',
       'J' => 'unite the current line with the next one',
@@ -25,6 +26,7 @@ module Command
       'O' => 'open a new line above and insert: ',
     }
     result = translations[text_value]
+
     if (result.respond_to? :swapcase)
       result + (mode == 'selection' ? ' selection' : '')
     else
