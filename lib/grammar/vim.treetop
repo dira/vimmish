@@ -1,11 +1,11 @@
 grammar Vim
   rule main
     (normal_mode / insert_mode / visual_mode / command_mode / motion)+ {
-    def eval
-        r = []
-        elements.each { |e| r += e.eval }
-        r
-    end
+      def eval
+          r = []
+          elements.each { |e| r += e.eval }
+          r
+      end
     }
   end
   
