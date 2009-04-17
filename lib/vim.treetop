@@ -1,19 +1,19 @@
 grammar Vim
   rule main
-     (normal_mode / command_insert / visual_mode / command_mode / motion)+ {
-      def eval
-          r = []
-          elements.each { |e| r += e.eval }
-          r
-      end
-     }
+    (normal_mode / insert_mode / visual_mode / command_mode / motion)+ {
+    def eval
+        r = []
+        elements.each { |e| r += e.eval }
+        r
+    end
+    }
   end
   
   rule normal_mode
-    nm_command_motionless / nm_command_with_motion
+    nmode_command_motionless / nmode_command_with_motion
   end
 
-    rule nm_command_motionless
+    rule nmode_command_motionless
       times:number? operator:(('x' / 'dd' / 'D' / 'J' / '~') <Command>) {
         def eval 
           r = []
@@ -23,9 +23,9 @@ grammar Vim
         }
     end
 
-    rule nm_command_with_motion
+    rule nmode_command_with_motion
       # the label is necessary for the optional motion in order to check it
-      times:number? command:(operator:nm_operator_on_selection motion:motion) {
+      times:number? command:(operator:nmode_operator_on_selection motion:motion) {
         def eval 
           r = []
           r << [times.text_value, "#{times.text_value} times: "] unless times.empty?
@@ -34,184 +34,123 @@ grammar Vim
         }
     end
   
-    rule nm_operator_on_selection
-      ('d' / 'y') <Command> 
+  include VimInsert     
+  rule insert_mode
+    imode / imode_change
+  end
+
+    rule imode
+      number:number? 
+      command:(("i" / "I" / "a" / "A" / "o" / "O" / "s" / "S" / 'C' / 'cc') <Command>) 
+      insert_input {
+        def eval
+          r = []
+          r << [number.text_value, "#{number.text_value} times: "] unless number.empty?
+          r << [command.text_value, command.eval] 
+          r + insert_input.eval
+        end
+      }
+    end
+    
+    rule imode_change
+      command:change_command motion insert_input {
+        def eval
+          r = []
+          r << [command.text_value + motion.text_value, "#{command.eval} #{motion.eval(:command)[1]}"] 
+          r + insert_input.eval
+        end
+      }
     end
 
-  
-  rule command_insert
-    command_insert_with_motion / command_insert_motionless
-  end
 
-  rule command_insert_motionless
-    number:number? simple_insert_command insert_input {
-      def eval
-        r = []
-        r << [number.text_value, "#{number.text_value} times: "] unless number.empty?
-        r << [simple_insert_command.text_value, simple_insert_command.eval] 
-        r + insert_input.eval
-      end
-    }
-  end
-  
-  rule command_insert_with_motion
-    change_command motion insert_input {
-      def eval
-        r = []
-        r << [change_command.text_value + motion.text_value, "#{change_command.eval} #{motion.eval(:command)[1]}"] 
-        r + insert_input.eval
-      end
-    }
-  end
-  
-  rule simple_insert_command
-     ("i" / "I" / "a" / "A" / "o" / "O" / "s" / "S" / 'C' / 'cc') <Command>
-  end
-
-  rule change_command
-    ('c' / 'c') <Command>
-  end
- 
-  rule insert_input
-    t:(!input_end .)* input_end {
-      def eval
-        [[t.text_value, 'type ' + t.text_value],
-         input_end.eval
-        ]
-      end
-    }
-  end
-  
-  rule input_end
-    # dirty hack - wihout OR, eval is not found
-    ('<ESC>' / '<ESC>') {
-      def eval
-        [text_value, 'go to normal mode']
-      end
-    }
-  end
-  
   rule visual_mode
-    v:( (c:'v' motions:(motion+)) /  (c:'gv' motions:(motion*)) ) command_for_selection {
+    selection:( (c:'v' motions:(motion+)) /  (c:'gv' motions:(motion*)) ) command_for_selection {
       def eval
-        r = [[
-          v.c.text_value, 
-          {
-            'v' => 'go to visual mode',
-            'gv' => 'restore previous visual selection'
-          }[v.c.text_value]
-        ]]
-        v.motions.elements.each do |m|
+        r = [[ selection.c.text_value, 
+              {
+                'v' => 'go to visual mode',
+                'gv' => 'restore previous visual selection'
+              }[selection.c.text_value]
+            ]]
+        selection.motions.elements.each do |m|
           r << m.eval(:selection)
         end
         r << command_for_selection.eval
       end
     }
   end
-  
-  rule command_for_selection
-    command_for_selection_change / command_for_selection_other
-  end
-  
-  rule command_for_selection_change
-    change_command insert_input {
-      def eval
-        r = []
-        r << [change_command.text_value, change_command.eval('selection')] 
-        r + insert_input.eval
-      end
-    }
-  end
 
-  rule command_for_selection_other
-    c:(nm_operator_on_selection / '~' <Command>) '' {
-      def eval
-        [c.text_value, c.eval('selection')]
-      end
-    }
-  end
+    rule command_for_selection
+      command_for_selection_change / command_for_selection_other
+    end
 
+      rule command_for_selection_change
+          command:change_command insert_input {
+            def eval
+              r = []
+              r << [command.text_value, command.eval('selection')] 
+              r + insert_input.eval
+            end
+          }
+        end
+
+        rule change_command
+          ('c' / 'c') <Command>
+        end
+
+        rule command_for_selection_other
+          c:(nmode_operator_on_selection / '~' <Command>) '' {
+            def eval
+              [c.text_value, c.eval('selection')]
+            end
+          }
+        end
+
+        rule nmode_operator_on_selection
+          ('d' / 'y') <Command> 
+        end
+
+  include VimCommandRanges
   rule command_mode
-    ':' range:range? command_for_command command_end {
+    ':' range:range? cmode_command cmode_end {
       def eval
         r = [
           [':', 'go to command mode']
         ]
         r << range.eval unless range.empty?
-        r += command_for_command.eval
-        r << [command_end.text_value, 'execute command and go to normal mode']
+        r += cmode_command.eval
+        r << [cmode_end.text_value, 'execute command and go to normal mode']
       end
     }
   end
   
-  rule range
-    l1:range_end ',' l2:range_end {
-      def eval
-        [text_value, "select range: #{l1.eval} to #{l2.eval}"]
+    rule cmode_command 
+      cmode_substitute / cmode_delete
+    end
+    
+      rule cmode_substitute
+        's' find:('/' term:[^/]+) replace:('/' term:(!cmode_end .)*) {
+          def eval
+            [
+              ['s', 'substitute'], 
+              [find.text_value, 'find ' + find.term.text_value],
+              [replace.text_value, 'replace with ' + replace.term.text_value]
+            ]
+          end
+        }
       end
-    }
-  end
-  
-  rule range_end
-    number {
-      def eval
-        'line ' + text_value
+      
+      rule cmode_delete
+        'd' {
+          def eval
+            [['d', 'delete range']]
+          end
+        }
       end
-    } / 
-    '+' n:number {
-      def eval
-        "the next #{n.text_value} line(s)"
-      end
-    } / 
-    '-' n:number {
-      def eval
-        "the previous #{n.text_value} line(s)"
-      end
-    } / 
-    '^' {
-      def eval
-        'first line'
-      end
-    } / 
-    '$' {
-      def eval
-        'last line'
-      end
-    } / 
-    '.' {
-      def eval
-        'current line'
-      end
-    }
-  end
-  
-  rule command_for_command 
-    substitute / delete
-  end
-  
-  rule substitute
-    's' find:('/' term:[^/]+) replace:('/' term:(!command_end .)*) {
-      def eval
-        [
-          ['s', 'substitute'], 
-          [find.text_value, 'find ' + find.term.text_value],
-          [replace.text_value, 'replace with ' + replace.term.text_value]
-        ]
-      end
-    }
-  end
-  
-  rule delete
-    'd' {
-      def eval
-        [['d', 'delete range']]
-      end
-    }
-  end
 
-  rule command_end
-    '<CR>'
-  end
+    rule cmode_end
+      '<CR>'
+    end
 
   rule motion
       repeatable_motion / parametric_motion / where_motion / zero_motion
@@ -244,12 +183,11 @@ grammar Vim
       where:number? motion:('G' / 'gg') <Macromotion>
     end
 
-
-
-      rule motion_counter
-        (number / 'a' / 'i') 
-      end
+    rule motion_counter
+      (number / 'a' / 'i') 
+    end
       
+
   rule number
     [1-9] [0-9]*
   end

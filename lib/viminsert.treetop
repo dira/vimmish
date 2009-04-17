@@ -1,0 +1,20 @@
+grammar VimInsert 
+  rule insert_input
+    t:(!input_end .)* input_end {
+      def eval
+        [[t.text_value, 'type ' + t.text_value],
+         input_end.eval
+        ]
+      end
+    }
+  end
+  
+  rule input_end
+    # dirty hack - wihout OR, eval is not found
+    ('<ESC>' / '<ESC>') {
+      def eval
+        [text_value, 'go to normal mode']
+      end
+    }
+  end
+end

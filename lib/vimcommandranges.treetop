@@ -1,0 +1,42 @@
+grammar VimCommandRanges
+  rule range
+    l1:range_end ',' l2:range_end {
+      def eval
+        [text_value, "select range: #{l1.eval} to #{l2.eval}"]
+      end
+    }
+  end
+  
+    rule range_end
+      number {
+        def eval
+          'line ' + text_value
+        end
+      } / 
+      '+' n:number {
+        def eval
+          "the next #{n.text_value} line(s)"
+        end
+      } / 
+      '-' n:number {
+        def eval
+          "the previous #{n.text_value} line(s)"
+        end
+      } / 
+      '^' {
+        def eval
+          'first line'
+        end
+      } / 
+      '$' {
+        def eval
+          'last line'
+        end
+      } / 
+      '.' {
+        def eval
+          'current line'
+        end
+      }
+    end
+end
