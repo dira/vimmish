@@ -2,7 +2,6 @@ require File.join(File.dirname(__FILE__), 'test_helper.rb')
 parser = VimParser.new
 
 describe "smoke tests" do
-  #include Assertions
   ["d", "y"].each do |command|
     it "should parse #{command}" do
       parser.parse(command).should.not.be nil
@@ -16,6 +15,5 @@ describe "smoke tests" do
 
   it "should not parse inexistant command" do
     parser.parse('q').should.be nil
-    # p parser.failure_reason
   end
 end
