@@ -27,17 +27,17 @@ class Motion < Treetop::Runtime::SyntaxNode
       '%' => 'to the matching paranthesys',
       '(' => 'sentence',
       
-      'h' => 'left',
-      '<LEFT>' => 'left',
+      'h' => 'one character to the left',
+      '<LEFT>' => 'one character to the left',
       
-      'j' => 'down',
-      '<DOWN>' => 'down',
+      'j' => 'one character to the down',
+      '<DOWN>' => 'one character to the down',
      
-      'k' => 'up',
-      '<UP>' => 'up',
+      'k' => 'one character to the up',
+      '<UP>' => 'one character to the up',
       
-      'l' => 'right',
-      '<RIGHT>' => 'right',
+      'l' => 'one character to the right',
+      '<RIGHT>' => 'one character to the right',
     }
     return names[motion]
   end

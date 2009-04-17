@@ -5,10 +5,10 @@ describe 'motions' do
   describe 'arrows' do
     include Assertions
     {
-      'left' => ['h', '<LEFT>'],
-      'down' => ['j', '<DOWN>'],
-      'up' => ['k', '<UP>'],
-      'right' => ['l', '<RIGHT>'],
+      'one character to the left' => ['h', '<LEFT>'],
+      'one character to the down' => ['j', '<DOWN>'],
+      'one character to the up' => ['k', '<UP>'],
+      'one character to the right' => ['l', '<RIGHT>'],
     }.each_pair do |move, commands|
       commands.each do |vim|
         it "should parse #{vim} and translate correctly" do

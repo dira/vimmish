@@ -1,7 +1,4 @@
 grammar Vim
-    
-
-  
   rule main
      (command_operator / command_insert / visual_mode / command_mode / motion)+ {
       def eval
@@ -13,35 +10,71 @@ grammar Vim
   end
   
   rule command_operator
+    command_operator_motionless / command_operator_with_motion
+  end
+
+  rule command_operator_with_motion
     # the label is necessary for the optional motion in order to check it
-    number:number? t:(operator motion:motion?) {
+    number:number? t:(operator_with_motion motion:motion?) {
       def eval 
         r = []
         r << [number.text_value, "#{number.text_value} times: "] unless number.empty?
-        r << [t.text_value, t.operator.eval + (t.motion.empty? ? '' : " #{t.motion.eval(:command)[1]}")] 
+        r << [t.text_value, t.operator_with_motion.eval + (t.motion.empty? ? '' : " #{t.motion.eval(:command)[1]}")] 
       end
       }
   end
   
-  rule operator
+  rule command_operator_motionless
+    number:number? operator_motionless {
+      def eval 
+        r = []
+        r << [number.text_value, "#{number.text_value} times: "] unless number.empty?
+        r << [operator_motionless.text_value, operator_motionless.eval] 
+      end
+      }
+  end
+  
+  rule operator_with_motion
     ('d' / 'y') <Command>
+  end
+
+  rule operator_motionless
+    ('x' / 'dd' / 'D' / 'J' / '~') <Command>
   end
   
   rule command_insert
-    insert_command motion insert_input {
+    command_insert_with_motion / command_insert_motionless
+  end
+
+  rule command_insert_motionless
+    number:number? simple_insert_command insert_input {
       def eval
         r = []
-        r << [insert_command.text_value + motion.text_value, "#{insert_command.eval} #{motion.eval(:command)[1]}"] 
+        r << [number.text_value, "#{number.text_value} times: "] unless number.empty?
+        r << [simple_insert_command.text_value, simple_insert_command.eval] 
         r + insert_input.eval
       end
     }
   end
   
-  rule insert_command
-    # dirty hack: otherwise a Command module is needed
-    ('c' / 'c') <Command>
+  rule command_insert_with_motion
+    change_command motion insert_input {
+      def eval
+        r = []
+        r << [change_command.text_value + motion.text_value, "#{change_command.eval} #{motion.eval(:command)[1]}"] 
+        r + insert_input.eval
+      end
+    }
   end
   
+  rule simple_insert_command
+     ("i" / "I" / "a" / "A" / "o" / "O" / "s" / "S" / 'C' / 'cc') <Command>
+  end
+
+  rule change_command
+    ('c' / 'c') <Command>
+  end
+ 
   rule insert_input
     t:(!input_end .)* input_end {
       def eval
@@ -76,10 +109,10 @@ grammar Vim
   end
   
   rule command_for_selection
-    insert_command insert_input {
+    change_command insert_input {
       def eval
         r = []
-        r << [insert_command.text_value, insert_command.eval('selection')] 
+        r << [change_command.text_value, change_command.eval('selection')] 
         r + insert_input.eval
       end
     }
