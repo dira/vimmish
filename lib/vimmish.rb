@@ -10,18 +10,20 @@ require 'lib/grammar/vimcommandranges'
 require 'lib/grammar/viminsert'
 require 'lib/grammar/vim'
 
-require 'pp'
-
 class Treetop::Runtime::SyntaxNode
   def inspect
     self.eval.map{|command, translation| "#{sprintf("%20s => %s",command, translation)}"}.join("\n")
   end
 end
 
-class VimParserFactory
+class Vimmish
   @@parser = nil
 
-  def self.get_vim_parser
+  def self.parser
     @@parser = @@parser || VimParser.new
+  end
+
+  def self.humanize(vim)
+    parser.parse(vim)
   end
 end

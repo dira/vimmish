@@ -1,5 +1,5 @@
 require File.join(File.dirname(__FILE__), 'test_helper.rb')
-parser = VimParserFactory.get_vim_parser
+parser = Vimmish.parser
 
 describe 'normal mode commands' do
   include Assertions

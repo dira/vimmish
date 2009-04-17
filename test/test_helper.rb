@@ -2,7 +2,7 @@ require 'rubygems'
 require 'test/spec'
 require 'mocha'
 
-require 'lib/vim_parser_factory'
+require 'lib/vimmish'
 require 'test/assertions'
 
 
