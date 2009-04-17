@@ -35,7 +35,7 @@ grammar Vim
   end
   
   rule operator_with_motion
-    ('d' / 'y') <Command>
+    ('d' / 'y') <Command> 
   end
 
   rule operator_motionless
@@ -95,12 +95,16 @@ grammar Vim
   end
   
   rule visual_mode
-    'v' motions:(motion+) command_for_selection {
+    v:( (c:'v' motions:(motion+)) /  (c:'gv' motions:(motion*)) ) command_for_selection {
       def eval
-        r = [
-          ['v', 'go to visual mode']
-        ]
-        motions.elements.each do |m|
+        r = [[
+          v.c.text_value, 
+          {
+            'v' => 'go to visual mode',
+            'gv' => 'restore previous visual selection'
+          }[v.c.text_value]
+        ]]
+        v.motions.elements.each do |m|
           r << m.eval(:selection)
         end
         r << command_for_selection.eval
@@ -109,11 +113,23 @@ grammar Vim
   end
   
   rule command_for_selection
+    command_for_selection_change / command_for_selection_other
+  end
+  
+  rule command_for_selection_change
     change_command insert_input {
       def eval
         r = []
         r << [change_command.text_value, change_command.eval('selection')] 
         r + insert_input.eval
+      end
+    }
+  end
+
+  rule command_for_selection_other
+    c:operator_with_motion '' {
+      def eval
+        [c.text_value, c.eval('selection')]
       end
     }
   end

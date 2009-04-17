@@ -10,3 +10,9 @@ require "lib/parametric_motion"
 require "test/assertions"
 
 Treetop.load "lib/vim"
+
+#class Treetop::Runtime::SyntaxNode
+ #def inspect
+   #super + '\n' + object_id.to_s
+ #end
+#end

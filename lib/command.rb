@@ -10,6 +10,7 @@ module Command
       when 'D' then 'delete the rest of the current line'
       when 'J' then 'unite the current line with the next one'
       when '~' then 'change character case'
+      when 'gv' then 're-select previous selection'
       
       when 'cc' then 'change current line with: '
       when 's' then 'substitute character with: '

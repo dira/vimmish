@@ -23,13 +23,16 @@ describe 'visual mode' do
     #vim.should parse_to(parser, result)
   #end
 
-  #it "should parse gv" do
-    #vim = "gv"
-    #result = [
-      #['gv', 'restore previous visual selection'],
-    #]
-    #vim.should parse_to(parser, result)
-  #end
+  it "should parse gv<RIGHT><UP>d" do
+    vim = "gv<RIGHT><UP>d"
+    result = [
+      ['gv', 'restore previous visual selection'],
+      ['<RIGHT>', 'select one character to the right'],
+      ['<UP>', 'select up'],
+      ['d', 'delete selection']
+    ]
+    vim.should parse_to(parser, result)
+  end
 
   it "should parse v3wcabcde<ESC>" do
     vim = "v3wcabcde<ESC>"

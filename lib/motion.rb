@@ -30,11 +30,11 @@ class Motion < Treetop::Runtime::SyntaxNode
       'h' => 'one character to the left',
       '<LEFT>' => 'one character to the left',
       
-      'j' => 'one character to the down',
-      '<DOWN>' => 'one character to the down',
+      'j' => 'down',
+      '<DOWN>' => 'down',
      
-      'k' => 'one character to the up',
-      '<UP>' => 'one character to the up',
+      'k' => 'up',
+      '<UP>' => 'up',
       
       'l' => 'one character to the right',
       '<RIGHT>' => 'one character to the right',

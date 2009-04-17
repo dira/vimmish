@@ -1,12 +1,6 @@
 require File.join(File.dirname(__FILE__), 'test_helper.rb')
 parser = VimParser.new
 
-#class Treetop::Runtime::SyntaxNode
-#  def inspect
-#    object_id.to_s + super
-#  end
-#end
-
 describe "smoke tests" do
   #include Assertions
   ["d", "y"].each do |command|
