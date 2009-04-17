@@ -41,6 +41,8 @@ describe 'motions' do
     {
       'w' => 'move to the begining of the next word',
       '4w' => 'move to the begining of the next word, 4 times',
+      'W' => 'move to the begining of the next space-separated word',
+      '4W' => 'move to the begining of the next space-separated word, 4 times',
       'b' => 'move to the begining of the previous word',
       '7b' => 'move to the begining of the previous word, 7 times',
       'e' => 'move to the end of the next word',

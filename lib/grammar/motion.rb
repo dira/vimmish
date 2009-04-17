@@ -12,6 +12,7 @@ class Motion < Treetop::Runtime::SyntaxNode
   def motion_name(motion)
     names = {
       'w' => ['to the begining of the next word', 'word'],
+      'W' => ['to the begining of the next space-separated word', 'word'],
       'b' => ['to the begining of the previous word', 'word'],
       'B' => ['backwards one space-separated-word', 'word'],
       'e' => ['to the end of the next word', 'word'],
