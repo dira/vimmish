@@ -14,10 +14,10 @@ grammar Vim
   end
 
     rule nmode_command_motionless
-      times:number? operator:(('x' / 'dd' / 'D' / 'J' / '~' ) <Command>) {
+      t:times? operator:(('x' / 'dd' / 'D' / 'J' / '~' ) <Command>) {
         def eval 
           r = []
-          r << [times.text_value, "#{times.text_value} times: "] unless times.empty?
+          r << t.eval unless t.empty?
           r << [operator.text_value, operator.eval] 
         end
         }
@@ -25,20 +25,20 @@ grammar Vim
 
     rule nmode_command_with_motion
       # the label is necessary for the optional motion in order to check it
-      times:number? command:(operator:nmode_operator_on_selection motion:motion) {
+      t:times? command:(operator:nmode_operator_on_selection motion:motion) {
         def eval 
           r = []
-          r << [times.text_value, "#{times.text_value} times: "] unless times.empty?
+          r << t.eval unless t.empty?
           r << [command.text_value, command.operator.eval + (command.motion.empty? ? '' : " #{command.motion.eval(:command)[0][1]}")] 
         end
         }
     end
   
     rule nmode_command_special
-      times:number? operator:('r' <Command>) replacement:. {
+      t:times? operator:('r' <Command>) replacement:. {
         def eval 
           r = []
-          r << [times.text_value, "#{times.text_value} times: "] unless times.empty?
+          r << t.eval unless t.empty?
           r << [operator.text_value, operator.eval] 
           r << [replacement.text_value, replacement.text_value]
         end
@@ -51,12 +51,12 @@ grammar Vim
   end
 
     rule imode
-      number:number? 
+      t:times?
       command:(("i" / "I" / "a" / "A" / "o" / "O" / "s" / "S" / 'C' / 'cc') <Command>) 
       insert_input {
         def eval
           r = []
-          r << [number.text_value, "#{number.text_value} times: "] unless number.empty?
+          r << t.eval unless t.empty?
           r << [command.text_value, command.eval] 
           r + insert_input.eval
         end
@@ -198,6 +198,14 @@ grammar Vim
       (number / 'a' / 'i') 
     end
       
+
+  rule times
+    number {
+      def eval
+        [text_value, "#{text_value} times: "]
+      end
+    }
+  end
 
   rule number
     [1-9] [0-9]*
