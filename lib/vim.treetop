@@ -127,7 +127,7 @@ grammar Vim
   end
 
   rule command_for_selection_other
-    c:operator_with_motion '' {
+    c:(operator_with_motion / '~' <Command>) '' {
       def eval
         [c.text_value, c.eval('selection')]
       end

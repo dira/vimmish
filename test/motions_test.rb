@@ -6,8 +6,8 @@ describe 'motions' do
     include Assertions
     {
       'one character to the left' => ['h', '<LEFT>'],
-      'one character to the down' => ['j', '<DOWN>'],
-      'one character to the up' => ['k', '<UP>'],
+      'down' => ['j', '<DOWN>'],
+      'up' => ['k', '<UP>'],
       'one character to the right' => ['l', '<RIGHT>'],
     }.each_pair do |move, commands|
       commands.each do |vim|

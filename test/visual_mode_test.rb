@@ -4,24 +4,25 @@ parser = VimParser.new
 describe 'visual mode' do
   include Assertions
 
-  #it "should parse vw~" do
-    #vim = "vw~"
-    #result = [
-      #['v', 'go to visual mode'],
-      #['w', 'select ot the begining of the next word'],
-      #['~', 'make uppercase']
-    #]
-    #vim.should parse_to(parser, result)
-  #end
+  it "should parse vw~" do
+    vim = "vw~"
+    result = [
+      ['v', 'go to visual mode'],
+      ['w', 'select to the begining of the next word'],
+      ['~', 'change character case']
+    ]
+    vim.should parse_to(parser, result)
+  end
 
-  #it "should parse v$" do
-    #vim = "v$"
-    #result = [
-      #['v', 'go to visual mode'],
-      #['w', 'select to the end of the line'],
-    #]
-    #vim.should parse_to(parser, result)
-  #end
+  it "should parse v$d" do
+    vim = "v$d"
+    result = [
+      ['v', 'go to visual mode'],
+      ['$', 'select to the end of the line'],
+      ['d', 'delete selection'],
+    ]
+    vim.should parse_to(parser, result)
+  end
 
   it "should parse gv<RIGHT><UP>d" do
     vim = "gv<RIGHT><UP>d"
