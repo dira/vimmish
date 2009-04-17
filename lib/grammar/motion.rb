@@ -6,8 +6,7 @@ class Motion < Treetop::Runtime::SyntaxNode
       :command => '',
       :selection => 'select ',
     }[mode]
-    r = "#{mode_part}#{r}"
-    [text_value, r]
+    [[text_value, "#{mode_part}#{r}"]]
   end
   
   def motion_name(motion)

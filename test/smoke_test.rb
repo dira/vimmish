@@ -1,5 +1,5 @@
 require File.join(File.dirname(__FILE__), 'test_helper.rb')
-parser = VimParser.new
+parser = VimParserFactory.get_vim_parser
 
 describe "smoke tests" do
   ["d", "y"].each do |command|

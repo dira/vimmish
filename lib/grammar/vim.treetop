@@ -29,7 +29,7 @@ grammar Vim
         def eval 
           r = []
           r << [times.text_value, "#{times.text_value} times: "] unless times.empty?
-          r << [command.text_value, command.operator.eval + (command.motion.empty? ? '' : " #{command.motion.eval(:command)[1]}")] 
+          r << [command.text_value, command.operator.eval + (command.motion.empty? ? '' : " #{command.motion.eval(:command)[0][1]}")] 
         end
         }
     end
@@ -56,7 +56,7 @@ grammar Vim
       command:change_command motion insert_input {
         def eval
           r = []
-          r << [command.text_value + motion.text_value, "#{command.eval} #{motion.eval(:command)[1]}"] 
+          r << [command.text_value + motion.text_value, "#{command.eval} #{motion.eval(:command)[0][1]}"] 
           r + insert_input.eval
         end
       }
@@ -73,7 +73,7 @@ grammar Vim
               }[selection.c.text_value]
             ]]
         selection.motions.elements.each do |m|
-          r << m.eval(:selection)
+          r << m.eval(:selection)[0]
         end
         r << command_for_selection.eval
       end

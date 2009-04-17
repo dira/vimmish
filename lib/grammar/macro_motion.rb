@@ -2,7 +2,7 @@ class Macromotion < Treetop::Runtime::SyntaxNode
   def eval (mode = nil)
     r = eval_simple(motion)
     r = 'select ' + r if mode == 'selection'
-    [text_value, r]
+    [[text_value, r]]
   end
   
   def motion_name(motion)

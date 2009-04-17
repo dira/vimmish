@@ -1,5 +1,5 @@
 require File.join(File.dirname(__FILE__), 'test_helper.rb')
-parser = VimParser.new
+parser = VimParserFactory.get_vim_parser
 
 describe 'motions' do
   describe 'arrows' do
@@ -12,7 +12,7 @@ describe 'motions' do
     }.each_pair do |move, commands|
       commands.each do |vim|
         it "should parse #{vim} and translate correctly" do
-          vim.should parse_to(parser, [vim, "move #{move}"])
+          vim.should parse_to(parser, [[vim, "move #{move}"]])
         end
       end
     end
@@ -31,7 +31,7 @@ describe 'motions' do
       '2Ty' => 'move to the previous y, 2 times',
     }.each_pair do |vim, result|
       it "should parse #{vim} and translate correctly" do
-        vim.should parse_to(parser, [vim, result])
+        vim.should parse_to(parser, [[vim, result]])
       end
     end
   end
@@ -55,7 +55,7 @@ describe 'motions' do
       '3gE' => 'move to the end of the previous space-separated-word, 3 times',
     }.each_pair do |vim, result|
       it "should parse #{vim} and translate correctly" do
-        vim.should parse_to(parser, [vim, result])
+        vim.should parse_to(parser, [[vim, result]])
       end
     end
   end
@@ -71,7 +71,7 @@ describe 'motions' do
       '3$' => 'move to the end of the line that is 2 lines below',
     }.each_pair do |vim, result|
       it "should parse #{vim} and translate correctly" do
-        vim.should parse_to(parser, [vim, result])
+        vim.should parse_to(parser, [[vim, result]])
       end
     end
   end
@@ -82,7 +82,7 @@ describe 'motions' do
       '%' => 'move to the matching paranthesys',
     }.each_pair do |vim, result|
       it "should parse #{vim} and translate correctly" do
-        vim.should parse_to(parser, [vim, result])
+        vim.should parse_to(parser, [[vim, result]])
       end
     end
   end
@@ -102,7 +102,7 @@ describe 'motions' do
       # CTRL+F scroll forward screen, CTRL+B scroll backword screen
     }.each_pair do |vim, result|
       it "should parse #{vim} and translate correctly" do
-        vim.should parse_to(parser, [vim, result])
+        vim.should parse_to(parser, [[vim, result]])
       end
     end
   end
