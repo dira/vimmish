@@ -1,0 +1,40 @@
+h1. Speak vimmish?
+
+vimmish translates a "vim input stream" to human-readable text:
+
+*From*
+
+<pre><code>iDon't know vim :(.<ESC>^2WBc2wbetter now<ESC><RIGHT>Da.<ESC>II can understan<ESC><RIGHT>~dE</code></pre>
+
+*To*
+
+<pre><code>
+                   i => insert before cursor: 
+  Don't know vim :(. => type Don't know vim :(.
+               <ESC> => go to normal mode
+                   ^ => move to the begining of the line (not blank character)
+                  2W => move to the begining of the next space-separated word, 2 times
+                   B => move backwards one space-separated-word
+                 c2w => change to the begining of the next word, 2 times
+          better now => type better now
+               <ESC> => go to normal mode
+             <RIGHT> => move one character to the right
+                   D => delete the rest of the current line
+                   a => append after cursor: 
+                   . => type .
+               <ESC> => go to normal mode
+                   I => insert to the begining of the current line: 
+     I can understan => type I can understan
+               <ESC> => go to normal mode
+             <RIGHT> => move one character to the right
+                   ~ => change character case
+                  dE => delete to the end of the next space-separated-word
+</code></pre>
+
+
+h2. Usage
+
+<pre><code>
+vimtalk = "iDon't know vim :(. Yet :)<ESC>"
+p Vimmish.humanize(vimtalk)
+</code></pre>
