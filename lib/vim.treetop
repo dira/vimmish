@@ -1,6 +1,6 @@
 grammar Vim
   rule main
-     (command_operator / command_insert / visual_mode / command_mode / motion)+ {
+     (normal_mode / command_insert / visual_mode / command_mode / motion)+ {
       def eval
           r = []
           elements.each { |e| r += e.eval }
@@ -9,38 +9,35 @@ grammar Vim
      }
   end
   
-  rule command_operator
-    command_operator_motionless / command_operator_with_motion
+  rule normal_mode
+    nm_command_motionless / nm_command_with_motion
   end
 
-  rule command_operator_with_motion
-    # the label is necessary for the optional motion in order to check it
-    number:number? t:(operator_with_motion motion:motion?) {
-      def eval 
-        r = []
-        r << [number.text_value, "#{number.text_value} times: "] unless number.empty?
-        r << [t.text_value, t.operator_with_motion.eval + (t.motion.empty? ? '' : " #{t.motion.eval(:command)[1]}")] 
-      end
-      }
-  end
-  
-  rule command_operator_motionless
-    number:number? operator_motionless {
-      def eval 
-        r = []
-        r << [number.text_value, "#{number.text_value} times: "] unless number.empty?
-        r << [operator_motionless.text_value, operator_motionless.eval] 
-      end
-      }
-  end
-  
-  rule operator_with_motion
-    ('d' / 'y') <Command> 
-  end
+    rule nm_command_motionless
+      times:number? operator:(('x' / 'dd' / 'D' / 'J' / '~') <Command>) {
+        def eval 
+          r = []
+          r << [times.text_value, "#{times.text_value} times: "] unless times.empty?
+          r << [operator.text_value, operator.eval] 
+        end
+        }
+    end
 
-  rule operator_motionless
-    ('x' / 'dd' / 'D' / 'J' / '~') <Command>
-  end
+    rule nm_command_with_motion
+      # the label is necessary for the optional motion in order to check it
+      times:number? command:(operator:nm_operator_on_selection motion:motion) {
+        def eval 
+          r = []
+          r << [times.text_value, "#{times.text_value} times: "] unless times.empty?
+          r << [command.text_value, command.operator.eval + (command.motion.empty? ? '' : " #{command.motion.eval(:command)[1]}")] 
+        end
+        }
+    end
+  
+    rule nm_operator_on_selection
+      ('d' / 'y') <Command> 
+    end
+
   
   rule command_insert
     command_insert_with_motion / command_insert_motionless
@@ -127,7 +124,7 @@ grammar Vim
   end
 
   rule command_for_selection_other
-    c:(operator_with_motion / '~' <Command>) '' {
+    c:(nm_operator_on_selection / '~' <Command>) '' {
       def eval
         [c.text_value, c.eval('selection')]
       end
