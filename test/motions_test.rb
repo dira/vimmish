@@ -22,16 +22,18 @@ describe 'motions' do
     include Assertions
     {
       'fy' => 'move on the next y',
-      '2fy' => 'move on the next y, 2 times',
       'Fy' => 'move on the previous y',
-      '2Fy' => 'move on the previous y, 2 times',
-      'ty' => 'move to the next y',
-      '2ty' => 'move to the next y, 2 times',
-      'Ty' => 'move to the previous y',
-      '2Ty' => 'move to the previous y, 2 times',
+      'ty' => 'move before the next y',
+      'Ty' => 'move before the previous y',
+      ';' => 'repeat last character find',
     }.each_pair do |vim, result|
       it "should parse #{vim} and translate correctly" do
         vim.should parse_to(parser, [[vim, result]])
+      end
+      
+      it "should parse 2#{vim} and translate correctly" do
+        vim = "2#{vim}"
+        vim.should parse_to(parser, [[vim, "#{result}, 2 times"]])
       end
     end
   end
@@ -97,11 +99,11 @@ describe 'motions' do
       '3G' => 'move to line 3',
       'gg' => 'move to first line (beginning of file)',
       '15gg' => 'move to line 15',
-      # TODO %90 = 90%
-      # TODO H - home, M - middle, L - last
-      # CTRL+U scroll down 50%, CTRL+D scroll up 50%,
-      # CTRL+E scroll up 1 line, CTRL+Y scroll down 1 line,
-      # CTRL+F scroll forward screen, CTRL+B scroll backword screen
+      #TODO %90 = 90%
+      #TODO H - home, M - middle, L - last
+      #CTRL+U scroll down 50%, CTRL+D scroll up 50%,
+      #CTRL+E scroll up 1 line, CTRL+Y scroll down 1 line,
+      #CTRL+F scroll forward screen, CTRL+B scroll backword screen
     }.each_pair do |vim, result|
       it "should parse #{vim} and translate correctly" do
         vim.should parse_to(parser, [[vim, result]])

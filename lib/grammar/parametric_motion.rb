@@ -9,8 +9,9 @@ class ParametricMotion < Treetop::Runtime::SyntaxNode
     names = {
       'f' => 'move on the next #{character}',
       'F' => 'move on the previous #{character}',
-      't' => 'move to the next #{character}',
-      'T' => 'move to the previous #{character}',
+      't' => 'move before the next #{character}',
+      'T' => 'move before the previous #{character}',
+      ';' => 'repeat the last character find',
     }
     return names[motion]
   end

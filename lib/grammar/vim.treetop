@@ -171,6 +171,7 @@ grammar Vim
       quantity:motion_counter?
       motion:(
         'h' / '<LEFT>' / 'j' / '<DOWN>' / 'k' / '<UP>' / 'l' / '<RIGHT>' /
+        ';' /
         [wWbeBE] / 'g' [eE] / 
         [$^] /
         '('
