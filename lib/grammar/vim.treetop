@@ -14,7 +14,7 @@ grammar Vim
   end
 
     rule nmode_command_motionless
-      t:times? operator:(('x' / 'dd' / 'D' / 'J' / '~' ) <Command>) {
+      t:times? operator:(('x' / 'dd' / 'D' / 'J' / '~' / '.' ) <Command>) {
         def eval 
           r = []
           r << t.eval unless t.empty?

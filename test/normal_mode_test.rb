@@ -18,6 +18,7 @@ describe 'normal mode commands' do
       ['r', 'replace current character with: '],
       ['@', '@']
     ],
+    "." => [ ['.', 'repeat last command'] ],
   }.each_pair do |vim, result|
     it "should parse #{vim}" do
       vim.should parse_to(parser, result)
