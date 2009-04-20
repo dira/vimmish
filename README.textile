@@ -36,5 +36,8 @@ h2. Usage
 
 <pre><code>
 vimtalk = "iDon't know vim :(. Yet :)<ESC>"
-p Vimmish.humanize(vimtalk)
+humanized = Vimmish.humanize(vimmish)
+
+pp humanized
+pp VimmishFormatters.pretty(humanized)
 </code></pre>

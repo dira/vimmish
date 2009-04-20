@@ -10,12 +10,6 @@ require 'lib/grammar/vimcommandranges'
 require 'lib/grammar/viminsert'
 require 'lib/grammar/vim'
 
-class Treetop::Runtime::SyntaxNode
-  def inspect
-    self.eval.map{|command, translation| "#{sprintf("%20s => %s",command, translation)}"}.join("\n")
-  end
-end
-
 class Vimmish
   @@parser = nil
 
@@ -24,6 +18,14 @@ class Vimmish
   end
 
   def self.humanize(vim)
-    parser.parse(vim)
+    parser.parse(vim).eval
+  end
+end
+
+class VimmishFormatters
+  def self.pretty(humanized, width=20)
+    humanized.map do |command, translation| 
+      "#{sprintf("%#{width}s => %s", command, translation)}"
+    end
   end
 end
