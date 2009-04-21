@@ -1,7 +1,5 @@
 h1. Speak vimmish?
 
-h2.
-
 vimmish translates a "vim input stream" to human-readable text:
 
 *From*
@@ -48,3 +46,4 @@ h2. Status
 
 It parses frequently used motions and commands for normal mode / insert mode / visual mode (combined with motions).
 Check the "test results":http://github.com/dira/vimmish/blob/master/test_results.txt
+
