@@ -1,0 +1,128 @@
+(in /home/irina/works/vimmish)
+
+visual mode
+- should parse vw~
+- should parse v$d
+- should parse gv<RIGHT><UP>d
+- should parse v3wcabcde<ESC>
+
+smoke tests
+- should parse dw
+- should parse d(
+- should parse yw
+- should parse y(
+- should not parse inexistant command
+
+command_mode
+- should parse command mode with substitute
+- should parse delete range 12,14
+- should parse delete range ^,14
+- should parse delete range 12,$
+- should parse delete range 12,.
+- should parse delete range .,+2
+- should parse delete range .,-2
+
+insert commands
+- should parse ccabc<ESC>
+- should parse 4ccabc<ESC>
+- should parse Cabc<ESC>
+- should parse 4Cabc<ESC>
+- should parse sabc<ESC>
+- should parse 4sabc<ESC>
+- should parse Sabc<ESC>
+- should parse 4Sabc<ESC>
+- should parse change right with something
+- should parse change word with something
+- should parse iabc<ESC>
+- should parse Iabc<ESC>
+- should parse aabc<ESC>
+- should parse Aabc<ESC>
+- should parse oabc<ESC>
+- should parse Oabc<ESC>
+
+normal mode commands
+- should parse x
+- should parse 3x
+- should parse .
+- should parse 3.
+- should parse r@
+- should parse 3r@
+- should parse y(
+- should parse 3y(
+- should parse daw
+- should parse 3daw
+- should parse diw
+- should parse 3diw
+- should parse ~
+- should parse 3~
+- should parse d3w
+- should parse 3d3w
+- should parse dw
+- should parse 3dw
+- should parse d2w
+- should parse 3d2w
+- should parse d1w
+- should parse 3d1w
+- should parse dd
+- should parse 5dd
+- should parse D
+- should parse 5D
+- should parse J
+- should parse 5J
+
+motions
+  arrows
+  - should parse h and translate correctly
+  - should parse <LEFT> and translate correctly
+  - should parse j and translate correctly
+  - should parse <DOWN> and translate correctly
+  - should parse l and translate correctly
+  - should parse <RIGHT> and translate correctly
+  - should parse k and translate correctly
+  - should parse <UP> and translate correctly
+  character movement
+  - should parse ; and translate correctly
+  - should parse 2; and translate correctly
+  - should parse Ty and translate correctly
+  - should parse 2Ty and translate correctly
+  - should parse ty and translate correctly
+  - should parse 2ty and translate correctly
+  - should parse Fy and translate correctly
+  - should parse 2Fy and translate correctly
+  - should parse fy and translate correctly
+  - should parse 2fy and translate correctly
+  word movement
+  - should parse 7B and translate correctly
+  - should parse 7b and translate correctly
+  - should parse W and translate correctly
+  - should parse w and translate correctly
+  - should parse B and translate correctly
+  - should parse b and translate correctly
+  - should parse 4W and translate correctly
+  - should parse 4w and translate correctly
+  - should parse E and translate correctly
+  - should parse e and translate correctly
+  - should parse 3gE and translate correctly
+  - should parse 3ge and translate correctly
+  - should parse 3E and translate correctly
+  - should parse 3e and translate correctly
+  - should parse gE and translate correctly
+  - should parse ge and translate correctly
+  line movement
+  - should parse 3^ and translate correctly
+  - should parse $ and translate correctly
+  - should parse 0 and translate correctly
+  - should parse 3$ and translate correctly
+  - should parse 1$ and translate correctly
+  - should parse ^ and translate correctly
+  syntax-dependent movement
+  - should parse % and translate correctly
+  moving to specific lines
+  - should parse gg and translate correctly
+  - should parse 15gg and translate correctly
+  - should parse G and translate correctly
+  - should parse 3G and translate correctly
+
+Finished in 0.229725 seconds.
+
+105 specifications (305 requirements), 0 failures
