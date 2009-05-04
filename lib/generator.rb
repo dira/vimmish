@@ -54,13 +54,50 @@ module Treetop
 
     class ParsingRule
       def generate
-        parsing_expression.generate 
+        ParsingExpresion.generate(parsing_expression)
+      end
+    end
+
+    # is not defined in the grammar
+    class ParsingExpresion
+      def self.generate(p)
+        if p.class == Choice
+          return p.generate
+        end
+        
+        result = []
+        p.elements.each do |e|
+          result = result.flatten
+          #pp e.class.name, e.class == Treetop::Compiler::Optional, e.class == OneOrMore
+          if e.class == Optional
+            delete_it = (rand(2) == 1) 
+            result.delete(result.last) if delete_it
+          elsif e.class == OneOrMore
+            how_many = rand(2)
+            how_many = 1
+            element = result.last.keys()[0]
+            # add, if necessary
+            p '+', element
+            (1..how_many).each{|nr| result << element.generate }
+          elsif e.class == ZeroOrMore
+            how_many = rand(3)
+            if (how_many == 0)
+              result.delete(result.last)
+            elsif (how_many > 1)
+              element = result.last.keys()[0]
+              (1..how_many - 1).each{|nr| result << element.generate }
+            end
+          else
+            result << e.generate
+          end
+        end
+        result
       end
     end
     
     class ParenthesizedExpression
       def generate
-        parsing_expression.generate 
+        ParsingExpresion.generate(parsing_expression)
       end
     end
 
@@ -68,10 +105,8 @@ module Treetop
       def generate
         # choose one
         chosen_index = rand(alternatives.size)
-        # TODO change
-        chosen_index = 0
         chosen = alternatives[chosen_index]
-        chosen.generate
+        [self => chosen.generate().flatten[0].values()[0]]
       end
     end
     
@@ -84,32 +119,8 @@ module Treetop
         end
         result = []
         primaries.select{|p| p.respond_to?(:sequence_primary)}.map do |p|
-        #mypp p.text_value
           p = p.sequence_primary
-          p.elements.each do |e|
-            #pp e.class.name, e.class == Treetop::Compiler::Optional, e.class == OneOrMore
-            if e.class == Optional
-              delete_it = (rand(2) == 1) 
-              result.delete(result.last) if delete_it
-            elsif e.class == OneOrMore
-             pp '+', result
-              how_many = rand(2)
-              how_many = 1
-              element = result.last.keys()[0]
-              # add, if necessary
-              (0..how_many).each{|nr| result << element.generate }
-            elsif e.class == ZeroOrMore
-              how_many = rand(3)
-              if (how_many == 0)
-                result.delete(result.last)
-              elsif (how_many > 1)
-                element = result.last.keys()[0]
-                (0..how_many - 1).each{|nr| result << element.generate }
-              end
-            else
-              result << e.generate
-            end
-          end
+          result = result + ParsingExpresion.generate(p)
         end
         result
       end
