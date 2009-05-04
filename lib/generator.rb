@@ -12,8 +12,18 @@ module Treetop
     def self.mash_result(result_array)
       result_array.flatten.map{|hash| hash.values()[0]}.join
     end
+
+    def self.get_grammar(file)
+      grammar_parser = Treetop::Compiler::MetagrammarParser.new
+
+      grammar_text = ''
+      File.open(file) do |source_file|
+        grammar_text = source_file.read
+      end
+      grammar_parser.parse(grammar_text)
+    end
   end
-  
+
   module Runtime
     class SyntaxNode
       def generate
@@ -37,24 +47,39 @@ module Treetop
       
       def self.rules; @@rules end
 
+      def self.add_rules(rules_array)
+        rules_array.each do |r|
+          @@rules[r.nonterminal.text_value] = r
+        end
+      end
+
       def extract_rules
         rules = []
 
-        declarations = declaration_sequence
-        rules << declarations.head
-        declarations.tail.each do |tail|
-          rules << tail
+        declarations = []
+        declarations << declaration_sequence.head
+        declaration_sequence.tail.each do |tail|
+          declarations << tail
+        end
+
+        # modules
+        modules = declarations.select{ |r| r.class != ParsingRule }
+        modules.each do |m|
+          name = m.text_value['include '.length..-1].downcase
+          file = "lib/grammar/#{name}.treetop"
+          parsed_module = Utils.get_grammar(file)
+          # hack: the grammar is on the first level
+          grammar = parsed_module.elements.select{|e| e.class == Grammar}.first
+          Grammar.add_rules(grammar.extract_rules)
         end
 
         # keep only the rules
-        rules.select{ |r| r.class == ParsingRule }
+        declarations.select{ |r| r.class == ParsingRule }
       end
       
       def generate
         rules_array = extract_rules()
-        rules_array.each do |r|
-          @@rules[r.nonterminal.text_value] = r
-        end
+        Grammar.add_rules(rules_array)
         rules_array[0].generate
       end
     end
@@ -69,43 +94,7 @@ module Treetop
     class ParsingExpresion
 
       def self.generate(p)
-        if p.class == Choice
-          return p.generate
-        end
-        
-        result = []
-        p.elements.each do |e|
-          result = result.flatten
-          #pp e.class.name, e.class == Treetop::Compiler::Optional, e.class == OneOrMore
-          if e.class == Optional
-            delete_it = (rand(2) == 1) 
-            result.delete(result.last) if delete_it
-          elsif e.class == OneOrMore
-            how_many = rand(2)
-            element = result.last.keys()[0]
-            # add, if necessary
-            (1..how_many).each{|nr| result << element.generate }
-          elsif e.class == ZeroOrMore
-            how_many = rand(3)
-            if (how_many == 0)
-              result.delete(result.last)
-            elsif (how_many > 1)
-              element = result.last.keys()[0]
-              (1..how_many - 1).each{|nr| result << element.generate }
-            end
-          else
-            result << e.generate
-          end
-        end
-        [ self => Utils.mash_result(result) ]
-      end
-    end
-    
-    class ParenthesizedExpression
-      def generate
-        ParsingExpresion.generate(parsing_expression)
-      end
-    end
+
 
     class Choice
       def generate
@@ -136,6 +125,10 @@ module Treetop
     class Nonterminal
       def generate
         rule = Grammar.rules[text_value]
+        if rule.nil?
+          pp text_value
+         1/0
+        end
         rule.parsing_expression.generate
       end
     end
@@ -162,13 +155,8 @@ module Treetop
 end
 
 
-grammar_parser = Treetop::Compiler::MetagrammarParser.new
 
-grammar_text = ''
-File.open('lib/grammar/vim.treetop') do |source_file|
-  grammar_text = source_file.read
-end 
-grammar = grammar_parser.parse(grammar_text)
+grammar = Treetop::Utils.get_grammar('lib/grammar/vim.treetop')
 result = grammar.generate
 result = result.flatten.map{|m| m.values()[0]}
 pp 'end: ', result.join
