@@ -6,7 +6,14 @@ def mypp(*s)
   #pp s
 end
 
+
 module Treetop
+  class Utils
+    def self.mash_result(result_array)
+      result_array.flatten.map{|hash| hash.values()[0]}.join
+    end
+  end
+  
   module Runtime
     class SyntaxNode
       def generate
@@ -16,7 +23,7 @@ module Treetop
             result << e.generate
           end
         end
-        result
+        [ self => Utils.mash_result(result) ]
       end
     end
   end
@@ -60,6 +67,7 @@ module Treetop
 
     # is not defined in the grammar
     class ParsingExpresion
+
       def self.generate(p)
         if p.class == Choice
           return p.generate
@@ -74,10 +82,8 @@ module Treetop
             result.delete(result.last) if delete_it
           elsif e.class == OneOrMore
             how_many = rand(2)
-            how_many = 1
             element = result.last.keys()[0]
             # add, if necessary
-            p '+', element
             (1..how_many).each{|nr| result << element.generate }
           elsif e.class == ZeroOrMore
             how_many = rand(3)
@@ -91,7 +97,7 @@ module Treetop
             result << e.generate
           end
         end
-        result
+        [ self => Utils.mash_result(result) ]
       end
     end
     
@@ -106,7 +112,8 @@ module Treetop
         # choose one
         chosen_index = rand(alternatives.size)
         chosen = alternatives[chosen_index]
-        [self => chosen.generate().flatten[0].values()[0]]
+        result = chosen.generate()
+        [ self => Utils.mash_result(result) ]
       end
     end
     
@@ -120,9 +127,9 @@ module Treetop
         result = []
         primaries.select{|p| p.respond_to?(:sequence_primary)}.map do |p|
           p = p.sequence_primary
-          result = result + ParsingExpresion.generate(p)
+          result << ParsingExpresion.generate(p)
         end
-        result
+        [ self => Utils.mash_result(result) ]
       end
     end
 
@@ -135,21 +142,22 @@ module Treetop
     
     class Terminal
       def generate
-        {self => text_value.gsub(/'/, '')}
+        [self => text_value.gsub(/'/, '')]
       end
     end
 
     class AnythingSymbol
-      def generate; [self => '&'] end
+      def generate
+        [self => '&']
+      end
     end
 
     class CharacterClass
       def generate
         # [0-9]
-        {self => text_value[-2..-2]}
+        [self => text_value[-2..-2]]
       end
     end
-  
   end
 end
 
