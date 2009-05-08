@@ -94,6 +94,43 @@ module Treetop
     class ParsingExpresion
 
       def self.generate(p)
+        if p.class == Choice
+          return p.generate
+        end
+
+        result = []
+        p.elements.each do |e|
+          result = result.flatten
+          #pp e.class.name, e.class == Treetop::Compiler::Optional, e.class == OneOrMore
+          if e.class == Optional
+            delete_it = (rand(2) == 1)
+            result.delete(result.last) if delete_it
+          elsif e.class == OneOrMore
+            how_many = rand(2)
+            element = result.last.keys()[0]
+            # add, if necessary
+            (1..how_many).each{|nr| result << element.generate }
+          elsif e.class == ZeroOrMore
+            how_many = rand(3)
+            if (how_many == 0)
+              result.delete(result.last)
+            elsif (how_many > 1)
+              element = result.last.keys()[0]
+              (1..how_many - 1).each{|nr| result << element.generate }
+            end
+          else
+            result << e.generate
+          end
+        end
+        [ self => Utils.mash_result(result) ]
+      end
+    end
+
+    class ParenthesizedExpression
+      def generate
+        ParsingExpresion.generate(parsing_expression)
+      end
+    end
 
 
     class Choice
