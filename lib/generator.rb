@@ -27,6 +27,8 @@ module Treetop
   module Runtime
     class SyntaxNode
       def generate
+        return [ self => ''] if text_value.start_with?('!') # it's a prefix condition, ignore it
+
         result = []
         if elements
           elements.each do |e|
@@ -94,7 +96,9 @@ module Treetop
     class ParsingExpresion
 
       def self.generate(p)
-        if p.class == Choice
+        #pp p.text_value, p.class.name, '------------------------------------'
+        # something we know how to parse directly?
+        if p.class != Runtime::SyntaxNode
           return p.generate
         end
 
@@ -137,6 +141,7 @@ module Treetop
       def generate
         # choose one
         chosen_index = rand(alternatives.size)
+
         chosen = alternatives[chosen_index]
         result = chosen.generate()
         [ self => Utils.mash_result(result) ]
@@ -172,7 +177,9 @@ module Treetop
     
     class Terminal
       def generate
-        [self => text_value.gsub(/'/, '')]
+        # eliminate ' and "
+        result = text_value.gsub(/'/, '').gsub(/"/, '')
+        [self => result]
       end
     end
 
@@ -184,6 +191,7 @@ module Treetop
 
     class CharacterClass
       def generate
+    #p 'character class', text_value
         # [0-9]
         [self => text_value[-2..-2]]
       end
@@ -196,5 +204,10 @@ end
 grammar = Treetop::Utils.get_grammar('lib/grammar/vim.treetop')
 result = grammar.generate
 result = result.flatten.map{|m| m.values()[0]}
-pp 'end: ', result.join
-#pp grammar
+result = result.join
+pp 'final: ', result
+
+
+#check
+#require 'lib/vimmish'
+#pp Vimmish.parser.parse(result)
